@@ -7,6 +7,8 @@ package it.polito.tdp.artsmia;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import org.jgrapht.graph.SimpleWeightedGraph;
+
 import it.polito.tdp.artsmia.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -47,12 +49,34 @@ public class FXMLController {
     
     @FXML
     void doAnalizzaOggetti(ActionEvent event) {
-
+    	this.model.buildGraph();
+    	this.txtResult.setText("Grafo creato");
     }
 
     @FXML
     void doCalcolaComponenteConnessa(ActionEvent event) {
+    	String input = txtObjectId.getText();
+    	Integer inputNum = 0;
+    	
+    	if(input == "") {
+    		txtResult.setText("id inserito non valido");
+    		return;
+    	}
+    	
+    	try {
+    		inputNum = Integer.parseInt(input);
+    	}catch (NumberFormatException e){
+    		e.printStackTrace();
+    	}
+    	
+    	if(model.isIDinGraph(inputNum)) {
+    		Integer sizeConnessa = this.model.calcolaConnessa(inputNum);
+        	txtResult.setText("Il nodo "+input+" fa parte di una componente connessa di dimensione "+sizeConnessa);
 
+    	}else {
+    		txtResult.setText("id inserito non valido");
+    	}
+    	
     }
 
     @FXML

@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import it.polito.tdp.artsmia.model.ArtObject;
+import it.polito.tdp.artsmia.model.edgeModel;
 
 public class ArtsmiaDAO {
 
@@ -38,4 +40,68 @@ public class ArtsmiaDAO {
 		}
 	}
 	
+	public Integer getWeight (int sourceID, int targetID) {
+		
+		String query = "SELECT e1.object_id, e2.object_id, COUNT(*) as peso "
+				+ "FROM exhibition_objects e1, exhibition_objects e2 "
+				+ "WHERE e1.exhibition_id = e2.exhibition_id "
+				+ "AND e1.object_id=? AND e2.object_id=?";
+		
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(query);
+			st.setInt(1, sourceID);
+			st.setInt(2, targetID);
+			ResultSet rs = st.executeQuery();
+			
+			rs.next();
+			int peso = rs.getInt("peso");
+			
+			rs.close();
+			conn.close();
+			return peso;
+			
+		} catch (SQLException e) {
+			System.out.println("Error in dao");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<edgeModel> getAllWeights(Map<Integer, ArtObject> idMap) {
+		String query = "SELECT e1.object_id AS o1, e2.object_id AS o2, COUNT(*) AS peso "
+				+ "FROM exhibition_objects e1, exhibition_objects e2 "
+				+ "WHERE e1.exhibition_id = e2.exhibition_id "
+				+ "AND e1.object_id > e2.object_id "
+				+ "GROUP BY e1.object_id, e2.object_id "
+				+ "ORDER BY peso desc";
+		
+		List<edgeModel> allEdges = new ArrayList<>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(query);
+			ResultSet rs = st.executeQuery();
+			
+			while (rs.next()) {
+				int idSource = rs.getInt("o1");
+				int idTarget = rs.getInt("o2");
+				int peso = rs.getInt("peso");
+				edgeModel edgeI = new edgeModel(idMap.get(idSource), idMap.get(idTarget), peso);
+				
+				allEdges.add(edgeI);
+				
+			}
+		
+			rs.close();
+			conn.close();
+			return allEdges;
+		
+		} catch (SQLException e) {
+			System.out.println("Error in dao");
+			e.printStackTrace();
+			return null;
+		}
+	}
 }
